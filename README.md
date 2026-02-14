@@ -31,7 +31,19 @@ For detailed architecture information, see [docs/Structure.md](docs/Structure.md
 
 ## Quick Start
 
-### Using .NET Aspire (Recommended)
+### Using Docker Compose (Easiest)
+
+1. Clone the repository
+2. Run with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+3. Access:
+   - Frontend: http://localhost:3000
+   - API: http://localhost:5034
+   - PostgreSQL: localhost:5432
+
+### Using .NET Aspire (Recommended for Development)
 
 1. Clone the repository
 2. Run the AppHost:

@@ -28,8 +28,9 @@ public class JobRepository : IJobRepository
 
     public async Task<IEnumerable<Job>> GetByKnowledgeAsync(string knowledge)
     {
+        var lowerKnowledge = knowledge.ToLower();
         return await _context.Jobs
-            .Where(j => j.IsActive && j.RequiredKnowledge.Any(k => k.Contains(knowledge)))
+            .Where(j => j.IsActive && j.RequiredKnowledge.Any(k => k.ToLower().Contains(lowerKnowledge)))
             .OrderByDescending(j => j.PostedDate)
             .ToListAsync();
     }
