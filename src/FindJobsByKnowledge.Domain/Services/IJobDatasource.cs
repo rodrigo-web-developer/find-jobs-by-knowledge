@@ -20,11 +20,12 @@ public interface IJobDatasource
     bool IsEnabled { get; }
     
     /// <summary>
-    /// Searches for jobs matching the specified tags/keywords
+    /// Searches for jobs matching the specified tags with proficiency levels.
+    /// Each datasource maps the generic 1-5 levels to its own API-specific proficiency values.
     /// </summary>
-    /// <param name="tags">Array of tags to search for (e.g., "React", "C#", "Remote")</param>
+    /// <param name="tags">Array of tag+level pairs to search for</param>
     /// <returns>Collection of jobs matching the tags</returns>
-    Task<IEnumerable<JobDto>> FindJobsByTagsAsync(string[] tags);
+    Task<IEnumerable<JobDto>> FindJobsByTagsAsync(TagLevel[] tags);
     
     /// <summary>
     /// Gets a specific job by its ID from this datasource

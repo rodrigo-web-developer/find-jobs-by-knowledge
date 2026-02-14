@@ -7,6 +7,6 @@ namespace FindJobsByKnowledge.Domain.Services;
 /// </summary>
 public interface IJobService
 {
-    Task<IEnumerable<JobDto>> FindJobsByTags(string[] tags);
+    Task<IEnumerable<JobDto>> FindJobsByTags(TagLevel[] tags);
     Task<JobDto?> GetJobById(string id);
 }
