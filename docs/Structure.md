@@ -83,6 +83,14 @@ find-jobs-by-knowledge/
 │   │   └── Program.cs                       # API configuration & DI setup
 │   ├── FindJobsByKnowledge.TorreAI/         # Torre.ai integration
 │   │   ├── TorreAIJobDatasource.cs          # Torre API datasource
+│   │   ├── Models/                          # Torre.ai API response models
+│   │   │   ├── TorreSearchResult.cs         # Search results wrapper
+│   │   │   ├── TorreResult.cs               # Job opportunity from search
+│   │   │   ├── TorreOpportunity.cs          # Detailed opportunity (by ID)
+│   │   │   ├── TorreOrganization.cs         # Company information
+│   │   │   ├── TorreCompensation.cs         # Compensation structure
+│   │   │   ├── TorreSkill.cs                # Skill with proficiency
+│   │   │   └── TorreDetail.cs               # Job description/detail
 │   │   └── FindJobsByKnowledge.TorreAI.csproj
 │   ├── FindJobsByKnowledge.ServiceDefaults/ # Aspire defaults
 │   │   └── Extensions.cs                    # Service extensions

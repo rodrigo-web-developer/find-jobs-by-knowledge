@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using FindJobsByKnowledge.Domain.DTOs;
 using FindJobsByKnowledge.Domain.Services;
+using FindJobsByKnowledge.TorreAI.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -195,7 +196,7 @@ public class TorreAIJobDatasource : IJobDatasource
                 Company = result.Organizations?.FirstOrDefault()?.Name ?? "Unknown",
                 Description = result.Details?.FirstOrDefault()?.Content ?? "",
                 Location = result.Remote == true ? "Remote" : (result.Locations?.FirstOrDefault() ?? "Unknown"),
-                Salary = result.CompensationMin,
+                Salary = result.Compensation?.Data?.MinAmount,
                 PostedDate = result.Created ?? DateTime.UtcNow,
                 Tags = result.Skills?.Select(s => s.Name ?? "").Where(n => n != "").ToList() ?? new(),
                 Source = DatasourceName
@@ -208,53 +209,3 @@ public class TorreAIJobDatasource : IJobDatasource
         }
     }
 }
-
-#region Torre API Response Models
-
-internal class TorreSearchResult
-{
-    public List<TorreResult>? Results { get; set; }
-    public int? Total { get; set; }
-}
-
-internal class TorreResult
-{
-    public string? Id { get; set; }
-    public string? Objective { get; set; }
-    public List<TorreOrganization>? Organizations { get; set; }
-    public List<TorreDetail>? Details { get; set; }
-    public List<string>? Locations { get; set; }
-    public bool? Remote { get; set; }
-    public decimal? CompensationMin { get; set; }
-    public decimal? CompensationMax { get; set; }
-    public DateTime? Created { get; set; }
-    public List<TorreSkill>? Skills { get; set; }
-}
-
-internal class TorreOpportunity
-{
-    public string? Id { get; set; }
-    public string? Objective { get; set; }
-    public List<TorreOrganization>? Organizations { get; set; }
-    public List<TorreDetail>? Details { get; set; }
-    public List<string>? Locations { get; set; }
-    public DateTime? Created { get; set; }
-    public List<TorreSkill>? Strengths { get; set; }
-}
-
-internal class TorreOrganization
-{
-    public string? Name { get; set; }
-}
-
-internal class TorreDetail
-{
-    public string? Content { get; set; }
-}
-
-internal class TorreSkill
-{
-    public string? Name { get; set; }
-}
-
-#endregion
