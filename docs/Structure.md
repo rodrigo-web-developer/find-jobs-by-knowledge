@@ -20,10 +20,16 @@ The application follows a clean layered architecture with domain-driven design p
    - Controllers for handling HTTP requests
    - Service implementations
    - Datasources folder containing data source implementations:
-     - `MockJobDatasource` - Mock data for demonstration
-   - References Domain layer
+     - `MockJobDatasource` - Mock data for demonstration (dev only)
+   - References Domain and TorreAI layers
 
-3. **Service Defaults** (`FindJobsByKnowledge.ServiceDefaults`)
+3. **TorreAI Layer** (`FindJobsByKnowledge.TorreAI`)
+   - Torre.ai external API integration
+   - `TorreAIJobDatasource` implements `IJobDatasource`
+   - Own proficiency-level mapping (generic 1-5 → Torre-specific values)
+   - References Domain layer only
+
+4. **Service Defaults** (`FindJobsByKnowledge.ServiceDefaults`)
    - Common Aspire service configurations
    - Shared settings across services
 
@@ -60,7 +66,8 @@ find-jobs-by-knowledge/
 ├── src/
 │   ├── FindJobsByKnowledge.Domain/           # Domain layer
 │   │   ├── DTOs/
-│   │   │   └── JobDto.cs                    # Job data transfer object
+│   │   │   ├── JobDto.cs                    # Job data transfer object
+│   │   │   └── TagLevel.cs                  # Tag + proficiency level (1-5)
 │   │   ├── Entities/
 │   │   │   └── Job.cs                       # Job entity
 │   │   └── Services/
@@ -72,8 +79,11 @@ find-jobs-by-knowledge/
 │   │   ├── Services/
 │   │   │   ├── JobService.cs                # Service implementation
 │   │   │   └── Datasources/                 # Data source implementations
-│   │   │       └── MockJobDatasource.cs     # Mock data source
+│   │   │       └── MockJobDatasource.cs     # Mock data source (dev only)
 │   │   └── Program.cs                       # API configuration & DI setup
+│   ├── FindJobsByKnowledge.TorreAI/         # Torre.ai integration
+│   │   ├── TorreAIJobDatasource.cs          # Torre API datasource
+│   │   └── FindJobsByKnowledge.TorreAI.csproj
 │   ├── FindJobsByKnowledge.ServiceDefaults/ # Aspire defaults
 │   │   └── Extensions.cs                    # Service extensions
 │   └── FindJobsByKnowledge.AppHost/         # Aspire host
@@ -97,6 +107,24 @@ find-jobs-by-knowledge/
 ## Data Model
 
 ### Domain Layer
+
+#### TagLevel (FindJobsByKnowledge.Domain.DTOs)
+Compound type for searching by skill and proficiency:
+- `Tag` (string) - Technology/skill name (e.g., "React", "C#")
+- `Level` (int, 1-5) - Proficiency level:
+  - 1 = Beginner
+  - 2 = Intermediate
+  - 3 = Self-sufficient
+  - 4 = Expert
+  - 5 = Proficient
+- `LevelName` (string, computed) - Human-readable level description
+
+Each datasource maps the generic 1-5 levels to its own API-specific values. For example, Torre.ai maps:
+  - 1 → "novice"
+  - 2 → "proficient"
+  - 3 → "proficient"
+  - 4 → "expert"
+  - 5 → "master"
 
 #### JobDto (FindJobsByKnowledge.Domain.DTOs)
 - `Id` (string) - Unique identifier
@@ -128,8 +156,8 @@ find-jobs-by-knowledge/
 
 - `GET /api/jobs` - Get all jobs from external APIs
 - `GET /api/jobs/{id}` - Get job by ID from cache or external API
-- `GET /api/jobs/search/{tag}` - Search jobs by single tag
-- `POST /api/jobs/search` - Search jobs by multiple tags (array in body)
+- `GET /api/jobs/search/{tag}?level=3` - Search jobs by single tag with optional level (1-5, default 3)
+- `POST /api/jobs/search` - Search jobs by multiple tags with levels (array of TagLevel in body)
 
 ### Examples
 
@@ -137,13 +165,16 @@ find-jobs-by-knowledge/
 # Get all jobs
 curl http://localhost:5034/api/jobs
 
-# Search by tag
+# Search by tag (defaults to level 3 = Self-sufficient)
 curl http://localhost:5034/api/jobs/search/React
 
-# Search by multiple tags
+# Search by tag with explicit level
+curl http://localhost:5034/api/jobs/search/React?level=4
+
+# Search by multiple tags with levels
 curl -X POST http://localhost:5034/api/jobs/search \
   -H "Content-Type: application/json" \
-  -d '["React", "TypeScript", "C#"]'
+  -d '[{"tag":"React","level":4},{"tag":"C#","level":3},{"tag":"Docker","level":2}]'
 ```
 
 ## Aspire Configuration
@@ -180,7 +211,9 @@ npm start
 
 ### Current Implementation
 
-The application uses a mock data source (`MockJobDatasource`) for demonstration purposes. This provides sample job data without requiring external API keys or network calls.
+The application uses multiple data sources via the Multi-DI pattern:
+- `MockJobDatasource` - Mock data for development/testing (dev environment only)
+- `TorreAIJobDatasource` - Torre.ai external API integration (all environments)
 
 ### IJobDatasource Interface
 
@@ -189,12 +222,14 @@ Located in `FindJobsByKnowledge.Domain.Services`, this interface defines the con
 ```csharp
 public interface IJobDatasource
 {
-    string DatasourceName { get; }           // e.g., "Mock API"
+    string DatasourceName { get; }           // e.g., "Torre.ai"
     bool IsEnabled { get; }                  // Control via configuration
-    Task<IEnumerable<JobDto>> FindJobsByTagsAsync(string[] tags);
+    Task<IEnumerable<JobDto>> FindJobsByTagsAsync(TagLevel[] tags);
     Task<JobDto?> GetJobByIdAsync(string id);
 }
 ```
+
+Each datasource must map the generic `TagLevel.Level` (1-5) to its own API-specific proficiency format.
 
 ### Adding External Data Sources
 
@@ -225,7 +260,12 @@ To integrate with external job APIs:
 
 ### Suggested External APIs
 
-1. **RemoteOK API** (https://remoteok.com/api)
+1. **Torre.ai API** (https://torre.ai) — **Already Integrated**
+   - Free, no API key required
+   - Skill/role-based search with proficiency levels
+   - See `docs/External_Jobs_API.md` for details
+
+2. **RemoteOK API** (https://remoteok.com/api)
    - Free, no API key required
    - Remote jobs focused
    - JSON format
@@ -245,6 +285,22 @@ To integrate with external job APIs:
 ### API Configuration
 
 Configuration can be set via `appsettings.json`, `appsettings.Development.json`, or environment variables.
+
+#### Current Configuration (appsettings.json)
+```json
+{
+  "ExternalApis": {
+    "TorreAI": {
+      "Enabled": true,
+      "PageSize": 20
+    }
+  }
+}
+```
+
+#### Environment Variable Format
+- `ExternalApis__TorreAI__Enabled` - Enable/disable Torre.ai datasource (true/false)
+- `ExternalApis__TorreAI__PageSize` - Number of results per query (default: 20)
 
 ### Frontend
 - `REACT_APP_API_URL` - API base URL (default: http://localhost:5034)
@@ -319,8 +375,9 @@ npm test
 ## Contributing
 
 When adding new external APIs:
-1. Add configuration in appsettings.json
-2. Create a method in JobService to fetch from the API
-3. Map the response to JobDto
-4. Update documentation
-5. Add appropriate error handling
+1. Create a new project (e.g., `FindJobsByKnowledge.MyApi`) referencing Domain
+2. Implement `IJobDatasource` with its own level mapping
+3. Add project reference in Api `.csproj`
+4. Register in `Program.cs`
+5. Add configuration in `appsettings.json`
+6. Update `Structure.md` and `External_Jobs_API.md` documentation
