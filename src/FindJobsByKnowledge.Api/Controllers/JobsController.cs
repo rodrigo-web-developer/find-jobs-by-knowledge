@@ -1,5 +1,5 @@
-using FindJobsByKnowledge.Api.DTOs;
-using FindJobsByKnowledge.Api.Services;
+using FindJobsByKnowledge.Domain.DTOs;
+using FindJobsByKnowledge.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FindJobsByKnowledge.Api.Controllers;

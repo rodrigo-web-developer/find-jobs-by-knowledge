@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FindJobsByKnowledge.Domain\FindJobsByKnowledge.Domain.csproj" />
     <ProjectReference Include="..\FindJobsByKnowledge.ServiceDefaults\FindJobsByKnowledge.ServiceDefaults.csproj" />
   </ItemGroup>
 
