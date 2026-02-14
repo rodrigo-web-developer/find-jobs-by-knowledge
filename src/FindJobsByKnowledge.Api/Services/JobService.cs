@@ -18,7 +18,7 @@ public class JobService : IJobService
         _configuration = configuration;
     }
 
-    public async Task<IEnumerable<JobDto>> FindJobsByTags(string[] tags)
+    public Task<IEnumerable<JobDto>> FindJobsByTags(string[] tags)
     {
         var jobs = new List<JobDto>();
 
@@ -37,10 +37,10 @@ public class JobService : IJobService
             _logger.LogError(ex, "Error fetching jobs from external APIs");
         }
 
-        return jobs;
+        return Task.FromResult<IEnumerable<JobDto>>(jobs);
     }
 
-    public async Task<JobDto?> GetJobById(string id)
+    public Task<JobDto?> GetJobById(string id)
     {
         try
         {
@@ -48,12 +48,13 @@ public class JobService : IJobService
             // This would typically query the specific API that provided this job
             
             var allJobs = GetMockJobs(Array.Empty<string>());
-            return allJobs.FirstOrDefault(j => j.Id == id);
+            var job = allJobs.FirstOrDefault(j => j.Id == id);
+            return Task.FromResult(job);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching job {JobId} from external API", id);
-            return null;
+            return Task.FromResult<JobDto?>(null);
         }
     }
 
