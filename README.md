@@ -1,58 +1,49 @@
-# Find Jobs by Knowledge
+# Find Jobs by Tags
 
-A modern full-stack web application for finding jobs based on required knowledge and skills. Built with .NET Aspire, ASP.NET Core 10, React, TypeScript, and PostgreSQL.
+A modern web application for finding jobs from external APIs based on technology tags. Built with .NET Aspire, ASP.NET Core 10, and React + TypeScript.
 
 ## Features
 
-- 🔍 Search jobs by required knowledge/skills
-- 📝 Create and manage job listings
+- 🔍 Search jobs by technology tags (e.g., React, C#, Docker)
+- 📡 Fetches jobs from external APIs (currently using mock data)
 - 🎯 Filter jobs based on specific technologies
-- 🗃️ PostgreSQL database with Entity Framework Core
-- 🐳 Docker support for containerized deployment
 - ☁️ .NET Aspire orchestration for cloud-native development
 - ⚛️ React + TypeScript frontend with Axios
+- 📊 DTOs for clean API contracts
 
 ## Architecture
 
-This project follows Clean Architecture principles with separated concerns:
+This project follows a lightweight architecture optimized for querying external APIs:
 
-- **Domain Layer**: Core business entities
-- **Repository Layer**: Data access with EF Core
-- **API Layer**: RESTful endpoints with ASP.NET Core
-- **Frontend**: React + TypeScript SPA
+- **API Layer**: RESTful endpoints with ASP.NET Core serving DTOs
+- **Service Layer**: JobService to aggregate data from external job APIs
+- **Frontend**: React + TypeScript SPA with tag-based search
+
+Jobs are retrieved from external APIs (not stored locally). The system acts as an aggregator and search interface for multiple job sources.
 
 For detailed architecture information, see [docs/Structure.md](docs/Structure.md)
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Node.js 18+](https://nodejs.org/)
-- [Docker](https://www.docker.com/) (optional, for containerized deployment)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [Node.js 18+](https://nodejs.org/) and npm
 
 ## Quick Start
 
-### Using Docker Compose (Easiest)
+### Using .NET Aspire (Recommended)
 
-1. Clone the repository
-2. Run with Docker Compose:
-   ```bash
-   docker-compose up -d
-   ```
-3. Access:
-   - Frontend: http://localhost:3000
-   - API: http://localhost:5034
-   - PostgreSQL: localhost:5432
+```bash
+# Clone the repository
+git clone https://github.com/rodrigo-web-developer/find-jobs-by-knowledge.git
+cd find-jobs-by-knowledge
 
-### Using .NET Aspire (Recommended for Development)
+# Run the AppHost
+cd src/FindJobsByKnowledge.AppHost
+dotnet run
 
-1. Clone the repository
-2. Run the AppHost:
-   ```bash
-   cd src/FindJobsByKnowledge.AppHost
-   dotnet run
-   ```
-3. Access the Aspire dashboard (URL shown in console output)
-4. The API and database will be automatically started
+# The Aspire dashboard will open automatically in your browser
+# Access the API through the dashboard
+```
 
 ### Running Individually
 
@@ -60,6 +51,8 @@ For detailed architecture information, see [docs/Structure.md](docs/Structure.md
 ```bash
 cd src/FindJobsByKnowledge.Api
 dotnet run
+
+# API will be available at http://localhost:5034
 ```
 
 #### Frontend
@@ -67,35 +60,39 @@ dotnet run
 cd frontend
 npm install
 npm start
+
+# Frontend will open at http://localhost:3000
 ```
 
-### Using Docker
+## API Endpoints
 
-#### Build and run API
+- `GET /api/jobs` - Get all jobs from external APIs
+- `GET /api/jobs/{id}` - Get job by ID
+- `GET /api/jobs/search/{tag}` - Search jobs by single tag
+- `POST /api/jobs/search` - Search jobs by multiple tags (body: string array)
+
+### Example API Calls
+
 ```bash
-docker build -f Dockerfile.api -t findjobs-api .
-docker run -p 8080:8080 findjobs-api
+# Get all jobs
+curl http://localhost:5034/api/jobs
+
+# Search by single tag
+curl http://localhost:5034/api/jobs/search/React
+
+# Search by multiple tags
+curl -X POST http://localhost:5034/api/jobs/search \
+  -H "Content-Type: application/json" \
+  -d '["React", "TypeScript"]'
 ```
-
-#### Build and run Frontend
-```bash
-docker build -f Dockerfile.frontend -t findjobs-frontend .
-docker run -p 80:80 findjobs-frontend
-```
-
-## Project Structure
-
-See [docs/Structure.md](docs/Structure.md) for detailed project structure and architecture documentation.
 
 ## Technologies
 
 ### Backend
 - .NET 10
 - ASP.NET Core Web API
-- Entity Framework Core
-- PostgreSQL
 - .NET Aspire
-- Npgsql
+- HttpClient for external API calls
 
 ### Frontend
 - React 18
@@ -103,14 +100,18 @@ See [docs/Structure.md](docs/Structure.md) for detailed project structure and ar
 - Axios
 - Create React App
 
-## API Endpoints
+## Integrating Real Job APIs
 
-- `GET /api/jobs` - Get all jobs
-- `GET /api/jobs/{id}` - Get job by ID
-- `GET /api/jobs/search/{knowledge}` - Search by knowledge
-- `POST /api/jobs` - Create new job
-- `PUT /api/jobs/{id}` - Update job
-- `DELETE /api/jobs/{id}` - Delete job
+The current implementation uses mock data. To integrate with real job APIs, update `src/FindJobsByKnowledge.Api/Services/JobService.cs`:
+
+### Suggested Job APIs
+- **Adzuna API** - Free tier available with job postings
+- **RemoteOK API** - Remote job listings
+- **The Muse API** - Tech job listings
+- **GitHub Jobs API** - (deprecated but can be used as reference)
+- Custom web scraping with proper rate limiting
+
+See the TODO comments in `JobService.cs` for integration points.
 
 ## License
 
