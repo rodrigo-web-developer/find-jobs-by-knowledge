@@ -18,17 +18,17 @@ public class MockJobDatasource : IJobDatasource
         _logger = logger;
     }
 
-    public Task<IEnumerable<JobDto>> FindJobsByTagsAsync(string[] tags)
+    public Task<IEnumerable<JobDto>> FindJobsByTagsAsync(TagLevel[] tags)
     {
         _logger.LogInformation("Fetching jobs from {Datasource} for tags: {Tags}", 
-            DatasourceName, string.Join(", ", tags));
+            DatasourceName, string.Join(", ", tags.Select(t => $"{t.Tag}({t.LevelName})")));
 
         var allJobs = GetMockJobs();
         
-        // Filter by tags if provided
+        // Filter by tags (level is informational for mock — we match by tag name only)
         if (tags.Length > 0)
         {
-            var lowerTags = tags.Select(t => t.ToLowerInvariant()).ToArray();
+            var lowerTags = tags.Select(t => t.Tag.ToLowerInvariant()).ToArray();
             allJobs = allJobs.Where(j => 
                 j.Tags.Any(tag => lowerTags.Contains(tag.ToLowerInvariant()))).ToList();
         }

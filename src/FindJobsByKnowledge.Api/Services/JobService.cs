@@ -19,14 +19,14 @@ public class JobService : IJobService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<JobDto>> FindJobsByTags(string[] tags)
+    public async Task<IEnumerable<JobDto>> FindJobsByTags(TagLevel[] tags)
     {
         var jobs = new List<JobDto>();
 
         try
         {
-            _logger.LogInformation("Searching for jobs with tags: {Tags} across {Count} datasources", 
-                string.Join(", ", tags), _datasources.Count());
+            _logger.LogInformation("Searching for jobs with {Count} tags across {DsCount} datasources", 
+                tags.Length, _datasources.Count());
 
             // Query all enabled datasources in parallel
             var tasks = _datasources
@@ -43,8 +43,8 @@ public class JobService : IJobService
                 .OrderByDescending(j => j.PostedDate)
                 .ToList();
             
-            _logger.LogInformation("Found {Count} total jobs (after deduplication) for tags: {Tags}", 
-                jobs.Count, string.Join(", ", tags));
+            _logger.LogInformation("Found {Count} total jobs (after deduplication)", 
+                jobs.Count);
         }
         catch (Exception ex)
         {
@@ -82,7 +82,7 @@ public class JobService : IJobService
         }
     }
 
-    private async Task<IEnumerable<JobDto>> FetchFromDatasource(IJobDatasource datasource, string[] tags)
+    private async Task<IEnumerable<JobDto>> FetchFromDatasource(IJobDatasource datasource, TagLevel[] tags)
     {
         try
         {

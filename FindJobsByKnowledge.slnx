@@ -2,6 +2,8 @@
   <Folder Name="/src/">
     <Project Path="src/FindJobsByKnowledge.Api/FindJobsByKnowledge.Api.csproj" />
     <Project Path="src/FindJobsByKnowledge.AppHost/FindJobsByKnowledge.AppHost.csproj" />
+    <Project Path="src/FindJobsByKnowledge.Domain/FindJobsByKnowledge.Domain.csproj" />
+    <Project Path="src/FindJobsByKnowledge.TorreAI/FindJobsByKnowledge.TorreAI.csproj" />
     <Project Path="src/FindJobsByKnowledge.ServiceDefaults/FindJobsByKnowledge.ServiceDefaults.csproj" />
   </Folder>
 </Solution>

@@ -1,6 +1,7 @@
 using FindJobsByKnowledge.Api.Services;
 using FindJobsByKnowledge.Api.Services.Datasources;
 using FindJobsByKnowledge.Domain.Services;
+using FindJobsByKnowledge.TorreAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,12 +14,14 @@ builder.Services.AddOpenApi();
 // Add HttpClient for external API calls
 builder.Services.AddHttpClient();
 
-// Register job datasource - only Mock datasource
+// Register job datasources
 
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<IJobDatasource, MockJobDatasource>();
 }
+
+builder.Services.AddScoped<IJobDatasource, TorreAIJobDatasource>();
 
 // Register job service (aggregates from all datasources)
 builder.Services.AddScoped<IJobService, JobService>();

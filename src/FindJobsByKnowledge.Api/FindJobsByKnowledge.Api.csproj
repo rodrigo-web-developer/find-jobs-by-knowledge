@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FindJobsByKnowledge.Domain\FindJobsByKnowledge.Domain.csproj" />
+    <ProjectReference Include="..\FindJobsByKnowledge.TorreAI\FindJobsByKnowledge.TorreAI.csproj" />
     <ProjectReference Include="..\FindJobsByKnowledge.ServiceDefaults\FindJobsByKnowledge.ServiceDefaults.csproj" />
   </ItemGroup>
 

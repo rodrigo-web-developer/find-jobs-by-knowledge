@@ -20,7 +20,7 @@ public class JobsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<JobDto>>> GetAll()
     {
-        var jobs = await _jobService.FindJobsByTags(Array.Empty<string>());
+        var jobs = await _jobService.FindJobsByTags(Array.Empty<TagLevel>());
         return Ok(jobs);
     }
 
@@ -36,7 +36,7 @@ public class JobsController : ControllerBase
     }
 
     [HttpPost("search")]
-    public async Task<ActionResult<IEnumerable<JobDto>>> FindByTags([FromBody] string[] tags)
+    public async Task<ActionResult<IEnumerable<JobDto>>> FindByTags([FromBody] TagLevel[] tags)
     {
         if (tags == null || tags.Length == 0)
         {
@@ -48,9 +48,10 @@ public class JobsController : ControllerBase
     }
 
     [HttpGet("search/{tag}")]
-    public async Task<ActionResult<IEnumerable<JobDto>>> FindByTag(string tag)
+    public async Task<ActionResult<IEnumerable<JobDto>>> FindByTag(string tag, [FromQuery] int level = 3)
     {
-        var jobs = await _jobService.FindJobsByTags(new[] { tag });
+        var tagLevel = new TagLevel { Tag = tag, Level = Math.Clamp(level, 1, 5) };
+        var jobs = await _jobService.FindJobsByTags(new[] { tagLevel });
         return Ok(jobs);
     }
 }
