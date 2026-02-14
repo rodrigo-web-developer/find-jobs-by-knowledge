@@ -7,18 +7,21 @@ This is a modern web application for finding jobs from external APIs based on te
 
 ### Service-Oriented Architecture
 
-The application follows a lightweight service-oriented architecture optimized for aggregating data from external job APIs:
+The application follows a clean layered architecture with domain-driven design principles:
 
-1. **API Layer** (`FindJobsByKnowledge.Api`)
+1. **Domain Layer** (`FindJobsByKnowledge.Domain`)
+   - Core business entities and models
+   - Service interfaces (`IJobService`, `IJobDatasource`)
+   - DTOs for data transfer
+   - No dependencies on other layers
+
+2. **API Layer** (`FindJobsByKnowledge.Api`)
    - RESTful API endpoints
    - Controllers for handling HTTP requests
-   - DTOs for response models
-   - No database dependencies
-
-2. **Service Layer** (`FindJobsByKnowledge.Api/Services`)
-   - JobService for querying external APIs
-   - Aggregates data from multiple sources
-   - Mock implementation included for demonstration
+   - Service implementations
+   - Datasources folder containing data source implementations:
+     - `MockJobDatasource` - Mock data for demonstration
+   - References Domain layer
 
 3. **Service Defaults** (`FindJobsByKnowledge.ServiceDefaults`)
    - Common Aspire service configurations
@@ -55,39 +58,48 @@ The application follows a lightweight service-oriented architecture optimized fo
 ```
 find-jobs-by-knowledge/
 ├── src/
-│   ├── FindJobsByKnowledge.Api/               # Web API
-│   │   ├── Controllers/
-│   │   │   └── JobsController.cs              # Jobs API endpoints
+│   ├── FindJobsByKnowledge.Domain/           # Domain layer
 │   │   ├── DTOs/
-│   │   │   └── JobDto.cs                      # Data transfer objects
+│   │   │   └── JobDto.cs                    # Job data transfer object
+│   │   ├── Entities/
+│   │   │   └── Job.cs                       # Job entity
+│   │   └── Services/
+│   │       ├── IJobService.cs               # Service interface
+│   │       └── IJobDatasource.cs            # Datasource interface
+│   ├── FindJobsByKnowledge.Api/             # Web API
+│   │   ├── Controllers/
+│   │   │   └── JobsController.cs            # Jobs API endpoints
 │   │   ├── Services/
-│   │   │   ├── IJobService.cs                 # Service interface
-│   │   │   └── JobService.cs                  # External API integration
-│   │   └── Program.cs                         # API configuration
-│   ├── FindJobsByKnowledge.ServiceDefaults/   # Aspire defaults
-│   │   └── Extensions.cs                      # Service extensions
-│   └── FindJobsByKnowledge.AppHost/           # Aspire host
-│       └── AppHost.cs                         # Orchestration setup
-├── frontend/                                   # React frontend
+│   │   │   ├── JobService.cs                # Service implementation
+│   │   │   └── Datasources/                 # Data source implementations
+│   │   │       └── MockJobDatasource.cs     # Mock data source
+│   │   └── Program.cs                       # API configuration & DI setup
+│   ├── FindJobsByKnowledge.ServiceDefaults/ # Aspire defaults
+│   │   └── Extensions.cs                    # Service extensions
+│   └── FindJobsByKnowledge.AppHost/         # Aspire host
+│       └── AppHost.cs                       # Orchestration setup
+├── frontend/                                 # React frontend
 │   ├── src/
 │   │   ├── components/
-│   │   │   └── JobCard.tsx                    # Job display component
+│   │   │   └── JobCard.tsx                  # Job display component
 │   │   ├── services/
-│   │   │   └── jobService.ts                  # API client
-│   │   └── App.tsx                            # Main app component
+│   │   │   └── jobService.ts                # API client
+│   │   └── App.tsx                          # Main app component
 │   └── package.json
 ├── docs/
-│   ├── Structure.md                           # This file
-│   └── GettingStarted.md                      # Setup guide
-├── Dockerfile.api                              # API container (deprecated)
-├── Dockerfile.frontend                         # Frontend container (deprecated)
-└── FindJobsByKnowledge.sln                    # Solution file
+│   ├── Structure.md                         # This file
+│   └── GettingStarted.md                    # Setup guide
+├── Dockerfile.api                            # API container (deprecated)
+├── Dockerfile.frontend                       # Frontend container (deprecated)
+└── FindJobsByKnowledge.sln                  # Solution file
 ```
 
 ## Data Model
 
-### JobDto
-- `Id` (string) - Unique identifier from external API
+### Domain Layer
+
+#### JobDto (FindJobsByKnowledge.Domain.DTOs)
+- `Id` (string) - Unique identifier
 - `Title` (string) - Job title
 - `Company` (string) - Company name
 - `Description` (string) - Job description
@@ -95,7 +107,20 @@ find-jobs-by-knowledge/
 - `Salary` (decimal, nullable) - Salary amount
 - `PostedDate` (DateTime) - When job was posted
 - `Tags` (string array) - Technology tags (e.g., "React", "C#", "Docker")
-- `Source` (string) - API source identifier
+- `Source` (string) - Datasource identifier
+
+#### Job Entity (FindJobsByKnowledge.Domain.Entities)
+- `Id` (Guid) - Unique identifier
+- `Title` (string) - Job title
+- `Company` (string) - Company name
+- `Description` (string) - Job description
+- `Location` (string) - Job location
+- `Salary` (decimal, nullable) - Salary amount
+- `PostedDate` (DateTime) - When job was posted
+- `RequiredKnowledge` (string array) - Required skills/knowledge
+- `IsActive` (bool) - Whether job is active
+- `CreatedAt` (DateTime) - Creation timestamp
+- `UpdatedAt` (DateTime, nullable) - Last update timestamp
 
 ## API Endpoints
 
@@ -151,77 +176,89 @@ npm install
 npm start
 ```
 
-## External API Integration
+## Data Sources
 
 ### Current Implementation
-The application currently uses mock data in `JobService.cs`. This provides a working demonstration without requiring external API keys.
 
-### Integrating Real APIs
+The application uses a mock data source (`MockJobDatasource`) for demonstration purposes. This provides sample job data without requiring external API keys or network calls.
 
-To integrate with real job APIs, modify `src/FindJobsByKnowledge.Api/Services/JobService.cs`:
+### IJobDatasource Interface
 
-#### Suggested APIs
-1. **Adzuna API** (https://developer.adzuna.com/)
-   - Free tier available
-   - Good documentation
-   - Multiple countries supported
+Located in `FindJobsByKnowledge.Domain.Services`, this interface defines the contract for all data sources:
 
-2. **RemoteOK API** (https://remoteok.com/api)
+```csharp
+public interface IJobDatasource
+{
+    string DatasourceName { get; }           // e.g., "Mock API"
+    bool IsEnabled { get; }                  // Control via configuration
+    Task<IEnumerable<JobDto>> FindJobsByTagsAsync(string[] tags);
+    Task<JobDto?> GetJobByIdAsync(string id);
+}
+```
+
+### Adding External Data Sources
+
+To integrate with external job APIs:
+
+1. **Create Implementation Class** in `FindJobsByKnowledge.Api/Services/Datasources/`:
+   ```csharp
+   using FindJobsByKnowledge.Domain.DTOs;
+   using FindJobsByKnowledge.Domain.Services;
+   
+   namespace FindJobsByKnowledge.Api.Services.Datasources;
+   
+   public class MyJobDatasource : IJobDatasource
+   {
+       public string DatasourceName => "MyAPI";
+       public bool IsEnabled => true;
+       
+       // Implement interface methods...
+   }
+   ```
+
+2. **Register in Program.cs**:
+   ```csharp
+   builder.Services.AddScoped<IJobDatasource, MyJobDatasource>();
+   ```
+
+3. **No Other Changes Required**: The `JobService` automatically aggregates from all registered datasources via Multi-DI pattern.
+
+### Suggested External APIs
+
+1. **RemoteOK API** (https://remoteok.com/api)
    - Free, no API key required
    - Remote jobs focused
    - JSON format
+
+2. **Adzuna API** (https://developer.adzuna.com/)
+   - Free tier available
+   - Good documentation
+   - Multiple countries supported
 
 3. **The Muse API** (https://www.themuse.com/developers/api/v2)
    - Free tier available
    - Tech-focused jobs
    - Good filtering options
 
-4. **Arbeitnow API** (https://www.arbeitnow.com/api)
-   - Free, no authentication
-   - Tech jobs in Europe
-
-#### Implementation Steps
-1. Add API keys to configuration (appsettings.json)
-2. Implement HTTP client calls in JobService
-3. Map external API responses to JobDto
-4. Add error handling and retry logic
-5. Implement caching for better performance
-6. Add rate limiting to respect API limits
-
-#### Example Integration
-```csharp
-public async Task<IEnumerable<JobDto>> FindJobsByTags(string[] tags)
-{
-    var jobs = new List<JobDto>();
-    
-    // Call Adzuna API
-    var adzunaJobs = await FetchFromAdzuna(tags);
-    jobs.AddRange(adzunaJobs);
-    
-    // Call RemoteOK API
-    var remoteJobs = await FetchFromRemoteOK(tags);
-    jobs.AddRange(remoteJobs);
-    
-    return jobs.DistinctBy(j => j.Id);
-}
-```
-
 ## Environment Variables
 
-### API
-- `ExternalApis__Adzuna__ApiKey` - Adzuna API key
-- `ExternalApis__Adzuna__AppId` - Adzuna App ID
-- `ExternalApis__RemoteOK__BaseUrl` - RemoteOK base URL (default: https://remoteok.com/api)
+### API Configuration
+
+Configuration can be set via `appsettings.json`, `appsettings.Development.json`, or environment variables.
 
 ### Frontend
 - `REACT_APP_API_URL` - API base URL (default: http://localhost:5034)
 
 ## Design Patterns
 
-1. **Service Pattern** - Encapsulates external API calls
-2. **DTO Pattern** - Clean separation between external and internal models
-3. **Dependency Injection** - Services registered in DI container
-4. **Async/Await** - Non-blocking I/O operations
+1. **Layered Architecture** - Clear separation between Domain, API, and Infrastructure layers
+2. **Domain-Driven Design** - Core interfaces and models in Domain layer
+3. **Multi-DI Pattern** - Multiple implementations of IJobDatasource injected as IEnumerable<IJobDatasource>
+4. **Service Pattern** - Encapsulates business logic in service classes
+5. **Strategy Pattern** - Each datasource is a different strategy for fetching job data
+6. **DTO Pattern** - Clean separation between domain entities and data transfer objects
+7. **Dependency Injection** - Services and datasources registered in DI container
+8. **Async/Await** - Non-blocking I/O operations for all data access
 
 ## CORS Configuration
 
@@ -229,10 +266,11 @@ The API is configured to allow cross-origin requests from any origin for develop
 
 ## Performance Considerations
 
-1. **Caching** - Consider implementing response caching for frequently accessed data
-2. **Rate Limiting** - Respect external API rate limits
-3. **Parallel Requests** - Query multiple APIs concurrently
-4. **Error Handling** - Gracefully handle external API failures
+1. **Parallel Datasource Querying** - All enabled datasources are queried concurrently using Task.WhenAll()
+2. **Deduplication** - Results are deduplicated by job ID to prevent duplicate listings
+3. **Caching** - Consider implementing response caching for frequently accessed data
+4. **Error Isolation** - If one datasource fails, others continue to work
+5. **Graceful Degradation** - Datasources can be individually disabled without affecting the service
 
 ## Future Enhancements
 
