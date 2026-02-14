@@ -1,5 +1,4 @@
-using FindJobsByKnowledge.Repository.Data;
-using FindJobsByKnowledge.Repository.Repositories;
+using FindJobsByKnowledge.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,11 +8,11 @@ builder.AddServiceDefaults();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Add PostgreSQL with Aspire
-builder.AddNpgsqlDbContext<ApplicationDbContext>("jobsdb");
+// Add HttpClient for external API calls
+builder.Services.AddHttpClient();
 
-// Add repositories
-builder.Services.AddScoped<IJobRepository, JobRepository>();
+// Add job service
+builder.Services.AddScoped<IJobService, JobService>();
 
 // Add CORS
 builder.Services.AddCors(options =>

@@ -20,7 +20,7 @@ function App() {
       const data = await jobService.getAllJobs();
       setJobs(data);
     } catch (err) {
-      setError('Failed to load jobs. Please make sure the API is running.');
+      setError('Failed to load jobs from external APIs. Please make sure the API is running.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -36,7 +36,7 @@ function App() {
     try {
       setLoading(true);
       setError(null);
-      const data = await jobService.searchJobsByKnowledge(searchTerm);
+      const data = await jobService.searchJobsByTag(searchTerm);
       setJobs(data);
     } catch (err) {
       setError('Failed to search jobs');
@@ -46,24 +46,17 @@ function App() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await jobService.deleteJob(id);
-      setJobs(jobs.filter(job => job.id !== id));
-    } catch (err) {
-      setError('Failed to delete job');
-      console.error(err);
-    }
-  };
-
   return (
     <div className="App" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <header style={{ marginBottom: '20px' }}>
-        <h1>Find Jobs by Knowledge</h1>
+        <h1>Find Jobs by Tags</h1>
+        <p style={{ color: '#666', marginBottom: '16px' }}>
+          Search for jobs from external APIs by technology tags
+        </p>
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <input
             type="text"
-            placeholder="Search by required knowledge (e.g., React, Python)"
+            placeholder="Search by tag (e.g., React, C#, Docker)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -101,20 +94,22 @@ function App() {
               fontSize: '16px'
             }}
           >
-            Clear
+            Show All
           </button>
         </div>
       </header>
 
-      {loading && <p>Loading jobs...</p>}
+      {loading && <p>Loading jobs from external APIs...</p>}
       {error && <div style={{ color: 'red', padding: '16px', backgroundColor: '#fee', borderRadius: '4px' }}>{error}</div>}
 
       <div>
         {jobs.length === 0 && !loading && (
-          <p style={{ textAlign: 'center', color: '#666' }}>No jobs found. The database might be empty.</p>
+          <p style={{ textAlign: 'center', color: '#666' }}>
+            No jobs found. Try searching with different tags or check that external APIs are accessible.
+          </p>
         )}
         {jobs.map(job => (
-          <JobCard key={job.id} job={job} onDelete={handleDelete} />
+          <JobCard key={job.id} job={job} />
         ))}
       </div>
     </div>

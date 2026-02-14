@@ -1,6 +1,5 @@
-using FindJobsByKnowledge.Api.Models;
-using FindJobsByKnowledge.Domain.Entities;
-using FindJobsByKnowledge.Repository.Repositories;
+using FindJobsByKnowledge.Api.DTOs;
+using FindJobsByKnowledge.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FindJobsByKnowledge.Api.Controllers;
@@ -9,26 +8,26 @@ namespace FindJobsByKnowledge.Api.Controllers;
 [Route("api/[controller]")]
 public class JobsController : ControllerBase
 {
-    private readonly IJobRepository _jobRepository;
+    private readonly IJobService _jobService;
     private readonly ILogger<JobsController> _logger;
 
-    public JobsController(IJobRepository jobRepository, ILogger<JobsController> logger)
+    public JobsController(IJobService jobService, ILogger<JobsController> logger)
     {
-        _jobRepository = jobRepository;
+        _jobService = jobService;
         _logger = logger;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Job>>> GetAll()
+    public async Task<ActionResult<IEnumerable<JobDto>>> GetAll()
     {
-        var jobs = await _jobRepository.GetAllAsync();
+        var jobs = await _jobService.FindJobsByTags(Array.Empty<string>());
         return Ok(jobs);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Job>> GetById(Guid id)
+    public async Task<ActionResult<JobDto>> GetById(string id)
     {
-        var job = await _jobRepository.GetByIdAsync(id);
+        var job = await _jobService.GetJobById(id);
         if (job == null)
         {
             return NotFound();
@@ -36,62 +35,22 @@ public class JobsController : ControllerBase
         return Ok(job);
     }
 
-    [HttpGet("search/{knowledge}")]
-    public async Task<ActionResult<IEnumerable<Job>>> GetByKnowledge(string knowledge)
+    [HttpPost("search")]
+    public async Task<ActionResult<IEnumerable<JobDto>>> FindByTags([FromBody] string[] tags)
     {
-        var jobs = await _jobRepository.GetByKnowledgeAsync(knowledge);
+        if (tags == null || tags.Length == 0)
+        {
+            return await GetAll();
+        }
+
+        var jobs = await _jobService.FindJobsByTags(tags);
         return Ok(jobs);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Job>> Create(CreateJobRequest request)
+    [HttpGet("search/{tag}")]
+    public async Task<ActionResult<IEnumerable<JobDto>>> FindByTag(string tag)
     {
-        var job = new Job
-        {
-            Title = request.Title,
-            Company = request.Company,
-            Description = request.Description,
-            Location = request.Location,
-            Salary = request.Salary,
-            PostedDate = request.PostedDate,
-            RequiredKnowledge = request.RequiredKnowledge
-        };
-
-        var createdJob = await _jobRepository.CreateAsync(job);
-        return CreatedAtAction(nameof(GetById), new { id = createdJob.Id }, createdJob);
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<Job>> Update(Guid id, UpdateJobRequest request)
-    {
-        var existingJob = await _jobRepository.GetByIdAsync(id);
-        if (existingJob == null)
-        {
-            return NotFound();
-        }
-
-        existingJob.Title = request.Title;
-        existingJob.Company = request.Company;
-        existingJob.Description = request.Description;
-        existingJob.Location = request.Location;
-        existingJob.Salary = request.Salary;
-        existingJob.PostedDate = request.PostedDate;
-        existingJob.RequiredKnowledge = request.RequiredKnowledge;
-
-        var updatedJob = await _jobRepository.UpdateAsync(existingJob);
-        return Ok(updatedJob);
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var job = await _jobRepository.GetByIdAsync(id);
-        if (job == null)
-        {
-            return NotFound();
-        }
-
-        await _jobRepository.DeleteAsync(id);
-        return NoContent();
+        var jobs = await _jobService.FindJobsByTags(new[] { tag });
+        return Ok(jobs);
     }
 }

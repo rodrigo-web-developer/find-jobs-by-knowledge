@@ -3,10 +3,9 @@ import { Job } from '../services/jobService';
 
 interface JobCardProps {
   job: Job;
-  onDelete: (id: string) => void;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, onDelete }) => {
+const JobCard: React.FC<JobCardProps> = ({ job }) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -27,16 +26,16 @@ const JobCard: React.FC<JobCardProps> = ({ job, onDelete }) => {
         </p>
       )}
       <p style={{ margin: '8px 0', fontSize: '14px', color: '#888' }}>
-        Posted: {new Date(job.postedDate).toLocaleDateString()}
+        Posted: {new Date(job.postedDate).toLocaleDateString()} • Source: {job.source}
       </p>
       
       {expanded && (
         <div style={{ marginTop: '12px' }}>
           <p style={{ margin: '8px 0' }}>{job.description}</p>
           <div style={{ marginTop: '12px' }}>
-            <strong>Required Knowledge:</strong>
+            <strong>Tags:</strong>
             <div style={{ marginTop: '4px' }}>
-              {job.requiredKnowledge.map((skill, index) => (
+              {job.tags.map((tag, index) => (
                 <span 
                   key={index} 
                   style={{ 
@@ -50,7 +49,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, onDelete }) => {
                     fontSize: '12px'
                   }}
                 >
-                  {skill}
+                  {tag}
                 </span>
               ))}
             </div>
@@ -71,19 +70,6 @@ const JobCard: React.FC<JobCardProps> = ({ job, onDelete }) => {
           }}
         >
           {expanded ? 'Show Less' : 'Show More'}
-        </button>
-        <button 
-          onClick={() => onDelete(job.id)}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Delete
         </button>
       </div>
     </div>

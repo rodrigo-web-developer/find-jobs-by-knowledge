@@ -10,20 +10,8 @@ export interface Job {
   location: string;
   salary?: number;
   postedDate: string;
-  requiredKnowledge: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface CreateJobRequest {
-  title: string;
-  company: string;
-  description: string;
-  location: string;
-  salary?: number;
-  postedDate: string;
-  requiredKnowledge: string[];
+  tags: string[];
+  source: string;
 }
 
 const api = axios.create({
@@ -44,17 +32,13 @@ export const jobService = {
     return response.data;
   },
 
-  searchJobsByKnowledge: async (knowledge: string): Promise<Job[]> => {
-    const response = await api.get<Job[]>(`/jobs/search/${knowledge}`);
+  searchJobsByTag: async (tag: string): Promise<Job[]> => {
+    const response = await api.get<Job[]>(`/jobs/search/${tag}`);
     return response.data;
   },
 
-  createJob: async (job: CreateJobRequest): Promise<Job> => {
-    const response = await api.post<Job>('/jobs', job);
+  searchJobsByTags: async (tags: string[]): Promise<Job[]> => {
+    const response = await api.post<Job[]>('/jobs/search', tags);
     return response.data;
-  },
-
-  deleteJob: async (id: string): Promise<void> => {
-    await api.delete(`/jobs/${id}`);
   },
 };
