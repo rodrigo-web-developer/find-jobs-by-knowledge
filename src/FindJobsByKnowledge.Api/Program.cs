@@ -1,9 +1,9 @@
-using FindJobsByKnowledge.Api;
 using FindJobsByKnowledge.Api.Services;
 using FindJobsByKnowledge.Api.Services.Datasources;
 using FindJobsByKnowledge.Domain.Services;
 using FindJobsByKnowledge.Repository.Data;
 using FindJobsByKnowledge.Repository.Repositories;
+using FindJobsByKnowledge.Repository.Seeding;
 using FindJobsByKnowledge.TorreAI;
 using Microsoft.EntityFrameworkCore;
 

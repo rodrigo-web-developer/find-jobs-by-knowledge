@@ -2,7 +2,7 @@ using FindJobsByKnowledge.Domain.Entities;
 using FindJobsByKnowledge.Repository.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace FindJobsByKnowledge.Api;
+namespace FindJobsByKnowledge.Repository.Seeding;
 
 /// <summary>
 /// Seeds the database with at least 5 questions per level (1-5) for each tag.
