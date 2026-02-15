@@ -3,9 +3,9 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App', () => {
-  it('renders find jobs by tags header', () => {
+  it('renders the application with navbar', () => {
     render(<App />);
-    const headerElement = screen.getByText(/Find Jobs by Tags/i);
-    expect(headerElement).toBeInTheDocument();
+    const navElement = screen.getByText(/Find Jobs by Knowledge/i);
+    expect(navElement).toBeInTheDocument();
   });
 });
