@@ -24,22 +24,19 @@ const QuestionaryPage: React.FC = () => {
   }, [questionaryId]);
 
   const loadQuestionary = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await questionaryService.getById(questionaryId);
+    setLoading(true);
+    setError(null);
+    const response = await questionaryService.getById(questionaryId);
+    setLoading(false);
 
-      if (data.isCompleted) {
+    if (response.success) {
+      if (response.data.isCompleted) {
         navigateTo(null, `/results/${questionaryId}`);
         return;
       }
-
-      setQuestionary(data);
-    } catch (err) {
+      setQuestionary(response.data);
+    } else {
       setError('Failed to load questionary.');
-      console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -73,22 +70,21 @@ const QuestionaryPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!questionary || !allAnswered) return;
 
-    try {
-      setSubmitting(true);
-      setError(null);
+    setSubmitting(true);
+    setError(null);
 
-      const answerItems: AnswerItem[] = Object.entries(answers).map(([itemId, selectedOptionIndex]) => ({
-        itemId,
-        selectedOptionIndex,
-      }));
+    const answerItems: AnswerItem[] = Object.entries(answers).map(([itemId, selectedOptionIndex]) => ({
+      itemId,
+      selectedOptionIndex,
+    }));
 
-      await questionaryService.submitAnswers(questionary.id, { answers: answerItems });
+    const response = await questionaryService.submitAnswers(questionary.id, { answers: answerItems });
+    setSubmitting(false);
+
+    if (response.success) {
       navigateTo(null, `/results/${questionary.id}`);
-    } catch (err) {
+    } else {
       setError('Failed to submit answers.');
-      console.error(err);
-    } finally {
-      setSubmitting(false);
     }
   };
 

@@ -21,16 +21,15 @@ const ResultsPage: React.FC = () => {
   }, [questionaryId]);
 
   const loadResults = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await questionaryService.getResults(questionaryId);
-      setResults(data);
-    } catch (err) {
+    setLoading(true);
+    setError(null);
+    const response = await questionaryService.getResults(questionaryId);
+    setLoading(false);
+
+    if (response.success) {
+      setResults(response.data);
+    } else {
       setError('Failed to load results.');
-      console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

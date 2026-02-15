@@ -22,16 +22,15 @@ const TagSelectionPage: React.FC = () => {
   const handleGenerate = async () => {
     if (selectedTags.length === 0) return;
 
-    try {
-      setLoading(true);
-      setError(null);
-      const questionary = await questionaryService.generate({ tags: selectedTags });
-      navigateTo(null, `/questionary/${questionary.id}`);
-    } catch (err) {
+    setLoading(true);
+    setError(null);
+    const response = await questionaryService.generate({ tags: selectedTags });
+    setLoading(false);
+
+    if (response.success) {
+      navigateTo(null, `/questionary/${response.data.id}`);
+    } else {
       setError('Failed to generate questionary. Make sure the API is running.');
-      console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

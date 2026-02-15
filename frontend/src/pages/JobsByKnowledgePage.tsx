@@ -23,23 +23,28 @@ const JobsByKnowledgePage: React.FC = () => {
   }, [questionaryId]);
 
   const loadJobsByKnowledge = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      const assessmentResults = await questionaryService.getResults(questionaryId);
-      setResults(assessmentResults);
-
-      if (assessmentResults.recommendedSearchTags.length > 0) {
-        const foundJobs = await jobService.searchByTags(assessmentResults.recommendedSearchTags);
-        setJobs(foundJobs);
-      }
-    } catch (err) {
-      setError('Failed to load jobs.');
-      console.error(err);
-    } finally {
+    const resultsResponse = await questionaryService.getResults(questionaryId);
+    if (!resultsResponse.success) {
+      setError('Failed to load assessment results.');
       setLoading(false);
+      return;
     }
+
+    setResults(resultsResponse.data);
+
+    if (resultsResponse.data.recommendedSearchTags.length > 0) {
+      const jobsResponse = await jobService.searchByTags(resultsResponse.data.recommendedSearchTags);
+      if (jobsResponse.success) {
+        setJobs(jobsResponse.data);
+      } else {
+        setError('Failed to load jobs.');
+      }
+    }
+
+    setLoading(false);
   };
 
   if (loading) return <LoadingSpinner message="Finding jobs matching your skills..." />;

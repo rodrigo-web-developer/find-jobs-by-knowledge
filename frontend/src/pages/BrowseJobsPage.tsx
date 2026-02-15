@@ -15,17 +15,16 @@ const BrowseJobsPage: React.FC = () => {
     const trimmed = tag.trim();
     if (!trimmed) return;
 
-    try {
-      setLoading(true);
-      setError(null);
-      const results = await jobService.searchByTag(trimmed);
-      setJobs(results);
+    setLoading(true);
+    setError(null);
+    const response = await jobService.searchByTag(trimmed);
+    setLoading(false);
+
+    if (response.success) {
+      setJobs(response.data);
       setSearched(true);
-    } catch (err) {
+    } else {
       setError('Failed to search jobs.');
-      console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
