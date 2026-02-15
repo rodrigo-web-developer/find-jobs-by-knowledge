@@ -1,7 +1,11 @@
+using FindJobsByKnowledge.Api;
 using FindJobsByKnowledge.Api.Services;
 using FindJobsByKnowledge.Api.Services.Datasources;
 using FindJobsByKnowledge.Domain.Services;
+using FindJobsByKnowledge.Repository.Data;
+using FindJobsByKnowledge.Repository.Repositories;
 using FindJobsByKnowledge.TorreAI;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +18,13 @@ builder.Services.AddOpenApi();
 // Add HttpClient for external API calls
 builder.Services.AddHttpClient();
 
+// Database context
+builder.AddNpgsqlDbContext<ApplicationDbContext>("postgresdb");
+
+// Register repositories
+builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<IQuestionaryRepository, QuestionaryRepository>();
+
 // Register job datasources
 
 if (builder.Environment.IsDevelopment())
@@ -23,8 +34,10 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddScoped<IJobDatasource, TorreAIJobDatasource>();
 
-// Register job service (aggregates from all datasources)
+// Register services
 builder.Services.AddScoped<IJobService, JobService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IQuestionaryService, QuestionaryService>();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -38,6 +51,14 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Auto-migrate database and seed questions
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+    await QuestionSeeder.SeedAsync(db);
+}
 
 app.MapDefaultEndpoints();
 
