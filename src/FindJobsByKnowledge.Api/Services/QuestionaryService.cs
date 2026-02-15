@@ -1,3 +1,4 @@
+using FindJobsByKnowledge.Api.Mappers;
 using FindJobsByKnowledge.Domain.DTOs;
 using FindJobsByKnowledge.Domain.Entities;
 using FindJobsByKnowledge.Domain.Services;
@@ -70,7 +71,7 @@ public class QuestionaryService : IQuestionaryService
         var created = await _questionaryRepository.CreateAsync(questionary);
         _logger.LogInformation("Generated questionary {Id} with {Count} questions", created.Id, items.Count);
 
-        return MapToDto(created, hideCorrectAnswers: true);
+        return QuestionaryMapper.MapToDto(created, hideCorrectAnswers: true);
     }
 
     public async Task<QuestionaryDto?> GetByIdAsync(Guid id)
@@ -78,13 +79,13 @@ public class QuestionaryService : IQuestionaryService
         var questionary = await _questionaryRepository.GetByIdAsync(id);
         if (questionary == null) return null;
 
-        return MapToDto(questionary, hideCorrectAnswers: !questionary.IsCompleted);
+        return QuestionaryMapper.MapToDto(questionary, hideCorrectAnswers: !questionary.IsCompleted);
     }
 
     public async Task<IEnumerable<QuestionaryDto>> GetAllAsync()
     {
         var questionaries = await _questionaryRepository.GetAllAsync();
-        return questionaries.Select(q => MapToDto(q, hideCorrectAnswers: !q.IsCompleted));
+        return questionaries.Select(q => QuestionaryMapper.MapToDto(q, hideCorrectAnswers: !q.IsCompleted));
     }
 
     public async Task<AssessmentResultDto?> SubmitAnswersAsync(Guid questionaryId, SubmitAnswersRequest request)
@@ -99,7 +100,7 @@ public class QuestionaryService : IQuestionaryService
         if (questionary.IsCompleted)
         {
             _logger.LogWarning("Questionary {Id} has already been completed", questionaryId);
-            return MapToAssessmentResult(questionary);
+            return QuestionaryMapper.MapToAssessmentResult(questionary);
         }
 
         // Apply answers
@@ -121,7 +122,7 @@ public class QuestionaryService : IQuestionaryService
         await _questionaryRepository.UpdateAsync(questionary);
         _logger.LogInformation("Questionary {Id} completed with {Count} tag results", questionaryId, questionary.Results.Count);
 
-        return MapToAssessmentResult(questionary);
+        return QuestionaryMapper.MapToAssessmentResult(questionary);
     }
 
     public async Task<AssessmentResultDto?> GetResultsAsync(Guid questionaryId)
@@ -129,7 +130,7 @@ public class QuestionaryService : IQuestionaryService
         var questionary = await _questionaryRepository.GetByIdAsync(questionaryId);
         if (questionary == null || !questionary.IsCompleted) return null;
 
-        return MapToAssessmentResult(questionary);
+        return QuestionaryMapper.MapToAssessmentResult(questionary);
     }
 
     /// <summary>
@@ -183,68 +184,4 @@ public class QuestionaryService : IQuestionaryService
 
         return results;
     }
-
-    private static QuestionaryDto MapToDto(Questionary questionary, bool hideCorrectAnswers)
-    {
-        return new QuestionaryDto
-        {
-            Id = questionary.Id,
-            Tags = questionary.Tags,
-            IsCompleted = questionary.IsCompleted,
-            CreatedAt = questionary.CreatedAt,
-            CompletedAt = questionary.CompletedAt,
-            Items = questionary.Items.Select(i => new QuestionaryItemDto
-            {
-                Id = i.Id,
-                QuestionId = i.QuestionId,
-                Tag = i.Question.Tag,
-                Level = i.Question.Level,
-                Text = i.Question.Text,
-                Options = i.Question.Options,
-                SelectedOptionIndex = i.SelectedOptionIndex,
-                IsCorrect = hideCorrectAnswers ? null : i.IsCorrect
-            }).ToList(),
-            Results = questionary.IsCompleted
-                ? questionary.Results.Select(r => new TagResultDto
-                {
-                    Tag = r.Tag,
-                    DeterminedLevel = r.DeterminedLevel,
-                    DeterminedLevelName = LevelName(r.DeterminedLevel),
-                    CorrectPercentage = r.CorrectPercentage,
-                    PercentagePerLevel = r.PercentagePerLevel
-                }).ToList()
-                : null
-        };
-    }
-
-    private static AssessmentResultDto MapToAssessmentResult(Questionary questionary)
-    {
-        return new AssessmentResultDto
-        {
-            QuestionaryId = questionary.Id,
-            Results = questionary.Results.Select(r => new TagResultDto
-            {
-                Tag = r.Tag,
-                DeterminedLevel = r.DeterminedLevel,
-                DeterminedLevelName = LevelName(r.DeterminedLevel),
-                CorrectPercentage = r.CorrectPercentage,
-                PercentagePerLevel = r.PercentagePerLevel
-            }).ToList(),
-            RecommendedSearchTags = questionary.Results.Select(r => new TagLevel
-            {
-                Tag = r.Tag,
-                Level = r.DeterminedLevel
-            }).ToList()
-        };
-    }
-
-    private static string LevelName(int level) => level switch
-    {
-        1 => "Beginner",
-        2 => "Intermediate",
-        3 => "Self-sufficient",
-        4 => "Expert",
-        5 => "Proficient",
-        _ => "Unknown"
-    };
 }

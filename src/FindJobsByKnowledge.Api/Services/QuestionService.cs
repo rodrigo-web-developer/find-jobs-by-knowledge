@@ -1,3 +1,4 @@
+using FindJobsByKnowledge.Api.Mappers;
 using FindJobsByKnowledge.Domain.DTOs;
 using FindJobsByKnowledge.Domain.Entities;
 using FindJobsByKnowledge.Domain.Services;
@@ -22,25 +23,25 @@ public class QuestionService : IQuestionService
     public async Task<IEnumerable<QuestionDto>> GetAllAsync()
     {
         var questions = await _repository.GetAllAsync();
-        return questions.Select(MapToDto);
+        return questions.Select(QuestionMapper.MapToDto);
     }
 
     public async Task<QuestionDto?> GetByIdAsync(Guid id)
     {
         var question = await _repository.GetByIdAsync(id);
-        return question == null ? null : MapToDto(question);
+        return question == null ? null : QuestionMapper.MapToDto(question);
     }
 
     public async Task<IEnumerable<QuestionDto>> GetByTagAsync(string tag)
     {
         var questions = await _repository.GetByTagAsync(tag);
-        return questions.Select(MapToDto);
+        return questions.Select(QuestionMapper.MapToDto);
     }
 
     public async Task<IEnumerable<QuestionDto>> GetByTagAndLevelAsync(string tag, int level)
     {
         var questions = await _repository.GetByTagAndLevelAsync(tag, level);
-        return questions.Select(MapToDto);
+        return questions.Select(QuestionMapper.MapToDto);
     }
 
     public async Task<QuestionDto> CreateAsync(QuestionDto dto)
@@ -56,7 +57,7 @@ public class QuestionService : IQuestionService
 
         var created = await _repository.CreateAsync(entity);
         _logger.LogInformation("Created question {Id} for tag '{Tag}' level {Level}", created.Id, created.Tag, created.Level);
-        return MapToDto(created);
+        return QuestionMapper.MapToDto(created);
     }
 
     public async Task<QuestionDto?> UpdateAsync(Guid id, QuestionDto dto)
@@ -72,7 +73,7 @@ public class QuestionService : IQuestionService
 
         var updated = await _repository.UpdateAsync(existing);
         _logger.LogInformation("Updated question {Id}", id);
-        return MapToDto(updated);
+        return QuestionMapper.MapToDto(updated);
     }
 
     public async Task<bool> DeleteAsync(Guid id)
@@ -84,14 +85,4 @@ public class QuestionService : IQuestionService
         _logger.LogInformation("Deleted question {Id}", id);
         return true;
     }
-
-    private static QuestionDto MapToDto(Question q) => new()
-    {
-        Id = q.Id,
-        Tag = q.Tag,
-        Level = q.Level,
-        Text = q.Text,
-        Options = q.Options,
-        CorrectOptionIndex = q.CorrectOptionIndex
-    };
 }
