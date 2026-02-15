@@ -115,7 +115,7 @@ public class QuestionaryService : IQuestionaryService
         }
 
         // Calculate results per tag
-        questionary.Results = CalculateResults(questionary);
+        questionary.Results = AssessmentCalculator.CalculateResults(questionary);
         questionary.IsCompleted = true;
         questionary.CompletedAt = DateTime.UtcNow;
 
@@ -131,57 +131,5 @@ public class QuestionaryService : IQuestionaryService
         if (questionary == null || !questionary.IsCompleted) return null;
 
         return QuestionaryMapper.MapToAssessmentResult(questionary);
-    }
-
-    /// <summary>
-    /// Calculates the skill level for each tag based on correct answer percentages per level.
-    /// The determined level is the highest level where the user scored >= 60%.
-    /// </summary>
-    private List<TagResult> CalculateResults(Questionary questionary)
-    {
-        var results = new List<TagResult>();
-
-        foreach (var tag in questionary.Tags)
-        {
-            var tagItems = questionary.Items
-                .Where(i => i.Question.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            if (tagItems.Count == 0) continue;
-
-            var percentagePerLevel = new Dictionary<int, double>();
-            var determinedLevel = 1;
-
-            for (int level = 1; level <= 5; level++)
-            {
-                var levelItems = tagItems.Where(i => i.Question.Level == level).ToList();
-                if (levelItems.Count == 0) continue;
-
-                var correctCount = levelItems.Count(i => i.IsCorrect == true);
-                var percentage = (double)correctCount / levelItems.Count * 100;
-                percentagePerLevel[level] = Math.Round(percentage, 1);
-
-                // User passes a level if they score >= 60%
-                if (percentage >= 60)
-                {
-                    determinedLevel = level;
-                }
-            }
-
-            var totalCorrect = tagItems.Count(i => i.IsCorrect == true);
-            var overallPercentage = (double)totalCorrect / tagItems.Count * 100;
-
-            results.Add(new TagResult
-            {
-                Id = Guid.NewGuid(),
-                QuestionaryId = questionary.Id,
-                Tag = tag,
-                DeterminedLevel = determinedLevel,
-                CorrectPercentage = Math.Round(overallPercentage, 1),
-                PercentagePerLevel = percentagePerLevel
-            });
-        }
-
-        return results;
     }
 }
