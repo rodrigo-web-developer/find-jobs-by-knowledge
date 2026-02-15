@@ -1,4 +1,4 @@
-import api, { type ResponseHttp } from './api';
+import api, { type HttpResponse } from './api';
 import type {
   QuestionaryDto,
   AssessmentResultDto,
@@ -7,24 +7,24 @@ import type {
 } from './types';
 
 const questionaryService = {
-  generate: async (request: GenerateQuestionaryRequest): Promise<ResponseHttp<QuestionaryDto>> => {
-    return await api.post<QuestionaryDto>('/questionary/generate', request) as ResponseHttp<QuestionaryDto>;
+  generate: async (request: GenerateQuestionaryRequest): Promise<HttpResponse<QuestionaryDto>> => {
+    return await api.post<QuestionaryDto>('/questionary/generate', request) as HttpResponse<QuestionaryDto>;
   },
 
-  getAll: async (): Promise<ResponseHttp<QuestionaryDto[]>> => {
-    return await api.get<QuestionaryDto[]>('/questionary') as ResponseHttp<QuestionaryDto[]>;
+  getAll: async (): Promise<HttpResponse<QuestionaryDto[]>> => {
+    return await api.get<QuestionaryDto[]>('/questionary') as HttpResponse<QuestionaryDto[]>;
   },
 
-  getById: async (id: string): Promise<ResponseHttp<QuestionaryDto>> => {
-    return await api.get<QuestionaryDto>(`/questionary/${id}`) as ResponseHttp<QuestionaryDto>;
+  getById: async (id: string): Promise<HttpResponse<QuestionaryDto>> => {
+    return await api.get<QuestionaryDto>(`/questionary/${id}`) as HttpResponse<QuestionaryDto>;
   },
 
-  submitAnswers: async (id: string, request: SubmitAnswersRequest): Promise<ResponseHttp<AssessmentResultDto>> => {
-    return await api.post<AssessmentResultDto>(`/questionary/${id}/submit`, request) as ResponseHttp<AssessmentResultDto>;
+  submitAnswers: async (id: string, request: SubmitAnswersRequest): Promise<HttpResponse<AssessmentResultDto>> => {
+    return await api.post<AssessmentResultDto>(`/questionary/${id}/submit`, request) as HttpResponse<AssessmentResultDto>;
   },
 
-  getResults: async (id: string): Promise<ResponseHttp<AssessmentResultDto>> => {
-    return await api.get<AssessmentResultDto>(`/questionary/${id}/results`) as ResponseHttp<AssessmentResultDto>;
+  getResults: async (id: string): Promise<HttpResponse<AssessmentResultDto>> => {
+    return await api.get<AssessmentResultDto>(`/questionary/${id}/results`) as HttpResponse<AssessmentResultDto>;
   },
 };
 

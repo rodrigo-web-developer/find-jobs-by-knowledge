@@ -7,7 +7,7 @@ const api = axios.create({
 
 api.interceptors.response.use(
     (response) => {
-        (response as SuccessResponse<any>).success = true;
+        (response as HttpSuccessResponse<any>).success = true;
         return response;
     },
     async (error) => {
@@ -19,7 +19,7 @@ api.interceptors.response.use(
         return Promise.reject(error);
     });
 
-interface SuccessResponse<T> extends AxiosResponse<T> {
+interface HttpSuccessResponse<T> extends AxiosResponse<T> {
     success: true;
 }
 
@@ -27,6 +27,6 @@ interface ErrorResponse extends AxiosResponse<any> {
     success: false;
 }
 
-export type ResponseHttp<T> = SuccessResponse<T> | ErrorResponse;
+export type HttpResponse<T> = HttpSuccessResponse<T> | ErrorResponse;
 
 export default api;
